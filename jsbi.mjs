@@ -16,19 +16,29 @@ class JSBI extends Array {
     if (length > JSBI.__kMaxLength) {
       throw new RangeError('Maximum BigInt size exceeded');
     }
+    // 如果子类中定义了构造函数，那么它必须先调用 super() 才能使用 this
     super(length);
     this.sign = sign;
   }
 
+  // 类（class）通过 static 关键字定义静态方法。不能在类的实例上调用静态方法，而应该通过类本身调用
   static BigInt(arg) {
+
     if (typeof arg === 'number') {
+      // __zero() => new JSBI(0, false)
       if (arg === 0) return JSBI.__zero();
+      // 将任一数值 x 与 0 进行按位或操作，其结果都是 x
+      // 3.1415 | 0 == 3
+      // 这里用来判断arg是否为整数
       if ((arg | 0) === arg) {
         if (arg < 0) {
+          // return JSBI(1) [ -arg, sign: true ]
+          // JSBI 有一个sign属性，而且有一个数组[-arg]
           return JSBI.__oneDigit(-arg, true);
         }
         return JSBI.__oneDigit(arg, false);
       }
+      // 如果arg不是有穷数或者arg不是整数
       if (!Number.isFinite(arg) || Math.floor(arg) !== arg) {
         throw new RangeError('The number ' + arg + ' cannot be converted to ' +
                              'BigInt because it is not an integer');
@@ -1882,12 +1892,19 @@ class JSBI extends Array {
   }
 }
 
+// __kMaxLength = 33554432
 JSBI.__kMaxLength = 1 << 25;
+
+// __kMaxLengthBits = 1073741824
 JSBI.__kMaxLengthBits = JSBI.__kMaxLength << 5;
+
 // Lookup table for the maximum number of bits required per character of a
 // base-N string representation of a number. To increase accuracy, the array
 // value is the actual value multiplied by 32. To generate this table:
 //
+// Math.ceil 返回大于或等于一个给定数字的最小整数 Math.ceil(.95) = 1
+// Math.log() 返回一个数的自然对数 Math.log(x) = ln(x)
+// 
 // for (let i = 0; i <= 36; i++) {
 //   console.log(Math.ceil(Math.log2(i) * 32) + ',');
 // }
